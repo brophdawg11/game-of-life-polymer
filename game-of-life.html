@@ -18,6 +18,12 @@
       }
     </style>
 
+    <a href="http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life" target="_blank">
+      <h2>Conway's Game of Life</h2>
+    </a>
+
+    <p>Click cells to toggle their state, and click Start below to begin</p>
+
     <table cellspacing="0" cellpadding="0">
       <template repeat="{{ row, rowIndex in board }}">
         <tr>
@@ -35,6 +41,9 @@
 
     <button on-click=" {{ startCycles }}">Start</button>
     <button on-click=" {{ stopCycles }}">Stop</button>
+    <div>
+      Grid Size: <input on-blur="{{ changeGridSize }}" value="{{gridsize}}" />
+    </div>
     <div>
       Cycles run: <span>{{ cyclesRun }}</span>
     </div>
@@ -119,12 +128,17 @@
                                          _.partial(_.identity, false)));
         },
 
+        reset: function () {
+          this.stopCycles();
+          this.cyclesRun = 0;
+          this.ready();
+        },
+
+
         attributeChanged: function(attrName, oldVal, newVal) {
           if (attrName === 'gridsize' && newVal > 0) {
-            this.stopCycles();
-            this.cyclesRun = 0;
             this.gridsize = newVal;
-            this.ready();
+            this.reset();
           }
         },
 
@@ -147,6 +161,10 @@
 
         stopCycles: function () {
           clearInterval(this.intervalHdl);
+        },
+
+        changeGridSize: function () {
+          this.reset();
         }
 
       });
