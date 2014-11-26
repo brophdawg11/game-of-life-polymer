@@ -1,6 +1,6 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 
-<polymer-element name="game-of-life">
+<polymer-element name="game-of-life" attributes="gridsize">
   <template>
     <style>
       table {
@@ -35,89 +35,122 @@
 
     <button on-click=" {{ startCycles }}">Start</button>
     <button on-click=" {{ stopCycles }}">Stop</button>
+    <div>
+      Cycles run: <span>{{ cyclesRun }}</span>
+    </div>
   </template>
 
   <script src="bower_components/lodash/dist/lodash.min.js"></script>
 
   <script>
-
-    function forEachCell(board, cb) {
-      _.each(board, function (row, i) {
-        _.each(row, function (cell, j) {
-          cb(cell, i, j);
+    (function () {
+      function forEachCell(board, cb) {
+        _.each(board, function (row, i) {
+          _.each(row, function (cell, j) {
+            cb(cell, i, j);
+          });
         });
-      });
-    }
-
-    function countLiveNeighbors(board, i, j) {
-      var count = 0;
-      for (var k = i - 1; k <= i + 1; k++) {
-        for (var l = j - 1; l <= j + 1; l++) {
-          // Skip edge cases
-          if (k == i && l == j ||
-              k < 0 || l < 0 ||
-              k >= board.length || j >= board[k].length) {
-            continue;
-          }
-          if (board[k][l]) { count++; }
-        }
-      }
-      return count;
-    }
-
-    function runCycle(board) {
-      var oldBoard = _.clone(board, true);
-      forEachCell(oldBoard, function (alive, i, j) {
-        var liveNeighbors = countLiveNeighbors(oldBoard, i, j);
-        if (alive) {
-          // Any live cell with less than two live neighbours dies,
-          // as if caused by under-population.
-          if (liveNeighbors < 2) {
-            board[i][j] = false;
-          }
-
-          // Any live cell with two or three live neighbours lives
-          // on to the next generation.
-          if (liveNeighbors >= 2 && liveNeighbors <= 3) {
-            board[i][j] = true;
-          }
-
-          // Any live cell with more than three live neighbours dies,
-          // as if by overcrowding.
-          if (liveNeighbors > 3) {
-            board[i][j] = false;
-          }
-        } else {
-          // Any dead cell with exactly three live neighbours becomes a live
-          // cell, as if by reproduction.
-          if (liveNeighbors === 3) {
-            board[i][j] = true;
-          }
-        }
-      });
-    }
-
-    Polymer({
-      // Init a 4x4 board of dead cells
-      board: _.times(5, _.partial(_.times, 5, _.partial(_.identity, false))),
-
-      // Click handler
-      toggleLife: function (evt, idx, el) {
-        console.log('toggleLife');
-        var i = el.getAttribute('data-i'),
-            j = el.getAttribute('data-j');
-        this.board[i][j] = !this.board[i][j];
-      },
-
-      startCycles: function () {
-        this.intervalHdl = setInterval(_.partial(runCycle, this.board), 1000);
-      },
-
-      stopCycles: function () {
-        clearInterval(this.intervalHdl);
       }
 
-    });
+      function countLiveNeighbors(board, i, j) {
+        var count = 0;
+        for (var k = i - 1; k <= i + 1; k++) {
+          for (var l = j - 1; l <= j + 1; l++) {
+            // Skip edge cases
+            if (k == i && l == j ||
+                k < 0 || l < 0 ||
+                k >= board.length || j >= board[k].length) {
+              continue;
+            }
+            if (board[k][l]) { count++; }
+          }
+        }
+        return count;
+      }
+
+      function runCycle(board) {
+        var oldBoard = _.clone(board, true);
+        forEachCell(oldBoard, function (alive, i, j) {
+          var liveNeighbors = countLiveNeighbors(oldBoard, i, j);
+          if (alive) {
+            // Any live cell with less than two live neighbours dies,
+            // as if caused by under-population.
+            if (liveNeighbors < 2) {
+              board[i][j] = false;
+            }
+
+            // Any live cell with two or three live neighbours lives
+            // on to the next generation.
+            if (liveNeighbors >= 2 && liveNeighbors <= 3) {
+              board[i][j] = true;
+            }
+
+            // Any live cell with more than three live neighbours dies,
+            // as if by overcrowding.
+            if (liveNeighbors > 3) {
+              board[i][j] = false;
+            }
+          } else {
+            // Any dead cell with exactly three live neighbours becomes a live
+            // cell, as if by reproduction.
+            if (liveNeighbors === 3) {
+              board[i][j] = true;
+            }
+          }
+        });
+      }
+
+      Polymer({
+        // Default grid size
+        publish: {
+          // Note: HTML attribute names are case sensitive, javascript are not
+          // TODO: Safe to jst use all lowercase I guess?
+          gridsize: 5
+        },
+
+        board: [],
+
+        cyclesRun: 0,
+
+        ready: function() {
+          // Initialize a square board of size 'gridSize'
+          this.board = _.times(this.gridsize,
+                               _.partial(_.times, this.gridsize,
+                                         _.partial(_.identity, false)));
+        },
+
+        attributeChanged: function(attrName, oldVal, newVal) {
+          if (attrName === 'gridsize' && newVal > 0) {
+            this.stopCycles();
+            this.cyclesRun = 0;
+            this.gridsize = newVal;
+            this.ready();
+          }
+        },
+
+        // Click handler
+        toggleLife: function (evt, idx, el) {
+          console.log('toggleLife');
+          var i = el.getAttribute('data-i'),
+              j = el.getAttribute('data-j');
+          this.board[i][j] = !this.board[i][j];
+        },
+
+        runCycle: function () {
+          this.cyclesRun++;
+          runCycle(this.board);
+        },
+
+        startCycles: function () {
+          this.intervalHdl = setInterval(_.bind(this.runCycle, this), 1000);
+        },
+
+        stopCycles: function () {
+          clearInterval(this.intervalHdl);
+        }
+
+      });
+    })();
   </script>
 </polymer-element>
 
