@@ -3,9 +3,14 @@
 <polymer-element name="game-of-life">
   <template>
     <style>
+      table {
+        border: 1px solid black;
+      }
+
       td div {
-        width: 10px;
-        height: 10px;
+        width: 25px;
+        height: 25px;
+        border: 1px solid black;
       }
 
       div.alive {
@@ -14,16 +19,22 @@
     </style>
 
     <table cellspacing="0" cellpadding="0">
-      <template repeat="{{ row in board }}">
+      <template repeat="{{ row, rowIndex in board }}">
         <tr>
-          <template repeat="{{ cell in row }}">
+          <template repeat="{{ cell, colIndex in row }}">
             <td>
-              <div class="{{ { alive: cell } | tokenList }}" />
+              <div class="{{ { alive: cell } | tokenList }}"
+                   data-i="{{ rowIndex }}"
+                   data-j="{{ colIndex }}"
+                   on-click="{{ toggleLife }}" />
             </td>
           </template>
         </tr>
       </template>
     </table>
+
+    <button on-click=" {{ startCycles }}">Start</button>
+    <button on-click=" {{ stopCycles }}">Stop</button>
   </template>
 
   <script src="bower_components/lodash/dist/lodash.min.js"></script>
@@ -39,11 +50,72 @@
     }
 
     function countLiveNeighbors(board, i, j) {
+      var count = 0;
+      for (var k = i - 1; k <= i + 1; k++) {
+        for (var l = j - 1; l <= j + 1; l++) {
+          // Skip edge cases
+          if (k == i && l == j ||
+              k < 0 || l < 0 ||
+              k >= board.length || j >= board[k].length) {
+            continue;
+          }
+          if (board[k][l]) { count++; }
+        }
+      }
+      return count;
+    }
 
+    function runCycle(board) {
+      var oldBoard = _.clone(board, true);
+      forEachCell(oldBoard, function (alive, i, j) {
+        var liveNeighbors = countLiveNeighbors(oldBoard, i, j);
+        if (alive) {
+          // Any live cell with less than two live neighbours dies,
+          // as if caused by under-population.
+          if (liveNeighbors < 2) {
+            board[i][j] = false;
+          }
+
+          // Any live cell with two or three live neighbours lives
+          // on to the next generation.
+          if (liveNeighbors >= 2 && liveNeighbors <= 3) {
+            board[i][j] = true;
+          }
+
+          // Any live cell with more than three live neighbours dies,
+          // as if by overcrowding.
+          if (liveNeighbors > 3) {
+            board[i][j] = false;
+          }
+        } else {
+          // Any dead cell with exactly three live neighbours becomes a live
+          // cell, as if by reproduction.
+          if (liveNeighbors === 3) {
+            board[i][j] = true;
+          }
+        }
+      });
     }
 
     Polymer({
-      board: _.times(4, _.partial(_.range, 3)),
+      // Init a 4x4 board of dead cells
+      board: _.times(5, _.partial(_.times, 5, _.partial(_.identity, false))),
+
+      // Click handler
+      toggleLife: function (evt, idx, el) {
+        console.log('toggleLife');
+        var i = el.getAttribute('data-i'),
+            j = el.getAttribute('data-j');
+        this.board[i][j] = !this.board[i][j];
+      },
+
+      startCycles: function () {
+        this.intervalHdl = setInterval(_.partial(runCycle, this.board), 1000);
+      },
+
+      stopCycles: function () {
+        clearInterval(this.intervalHdl);
+      }
 
     });
   </script>
