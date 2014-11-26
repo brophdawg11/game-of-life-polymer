@@ -1,0 +1,36 @@
+{
+  "name": "y",
+  "version": "0.0.0",
+  "authors": [
+    "Matt Brophy <matt@brophy.org>"
+  ],
+  "description": "A Polymer implementation of Conway's Game of Life",
+  "main": "index.html",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "polymer",
+    "game",
+    "of",
+    "life",
+    "web",
+    "components"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "polymer": "~0.5.1"
+  },
+  "dependencies": {
+    "polymer": "Polymer/polymer#~0.5.1",
+    "lodash": "~2.4.1"
+  }
+}

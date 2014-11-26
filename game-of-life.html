@@ -1,0 +1,51 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<polymer-element name="game-of-life">
+  <template>
+    <style>
+      td div {
+        width: 10px;
+        height: 10px;
+      }
+
+      div.alive {
+        background-color: black;
+      }
+    </style>
+
+    <table cellspacing="0" cellpadding="0">
+      <template repeat="{{ row in board }}">
+        <tr>
+          <template repeat="{{ cell in row }}">
+            <td>
+              <div class="{{ { alive: cell } | tokenList }}" />
+            </td>
+          </template>
+        </tr>
+      </template>
+    </table>
+  </template>
+
+  <script src="bower_components/lodash/dist/lodash.min.js"></script>
+
+  <script>
+
+    function forEachCell(board, cb) {
+      _.each(board, function (row, i) {
+        _.each(row, function (cell, j) {
+          cb(cell, i, j);
+        });
+      });
+    }
+
+    function countLiveNeighbors(board, i, j) {
+
+    }
+
+    Polymer({
+      board: _.times(4, _.partial(_.range, 3)),
+
+    });
+  </script>
+</polymer-element>
+
